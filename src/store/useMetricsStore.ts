@@ -1,4 +1,3 @@
-import { Cities } from "@/lib/data/dummyData"
 import { create } from "zustand"
 
 // Universal filter interface for all dimensions
@@ -79,31 +78,31 @@ const createDefaultFilters = (): UniversalFilters => ({
 const createInitialGraphFilters = (): Record<GraphId, UniversalFilters> => ({
   totalSessions: {
     userType: [],
-    city: [Cities.NewYork], // Default to New York
+    city: [], // Default to New York
     product: [],
     storeId: []
   },
   uniqueUsers: {
     userType: [],
-    city: [Cities.NewYork],
+    city: [],
     product: [],
     storeId: []
   },
   totalConversations: {
     userType: [],
-    city: [Cities.NewYork],
+    city: [],
     product: [],
     storeId: []
   },
   performanceCombination: {
     userType: [],
-    city: [Cities.NewYork],
+    city: [],
     product: [],
     storeId: []
   },
   resolutionBreakdown: {
     userType: [],
-    city: [Cities.NewYork],
+    city: [],
     product: [],
     storeId: []
   }
@@ -118,7 +117,7 @@ export const useMetricsStore = create<MetricsState>((set, get) => ({
   selectedIntents: [],
   
   // ✅ Global filters - Set New York as default for global city filter
-  globalCityFilter: [Cities.NewYork], // 🔄 Changed from [] to [Cities.NewYork]
+  globalCityFilter: [], // 🔄 Changed from [] to []
   globalUserTypeFilter: [], // ✅ Add global user type filter
   
   // ✅ Global filter actions
@@ -163,7 +162,7 @@ export const useMetricsStore = create<MetricsState>((set, get) => ({
         return acc
       }, {} as Record<GraphId, UniversalFilters>),
       // 🔄 Also reset global filters to New York default
-      globalCityFilter: [Cities.NewYork],
+      globalCityFilter: [],
       globalUserTypeFilter: []
     }),
 
