@@ -5,97 +5,154 @@ import StatCard from "@/components/StatCards"
 import { TotalSessionsGraph } from "@/components/graphs/TotalSessionsGraph"
 import { UniqueUsersGraph } from "@/components/graphs/UniqueUsersGraph"
 import { PerformanceCombinationChart } from "@/components/graphs/PerformanceCombinationChart"
-import { ResolutionBreakdownDonut } from "@/components/graphs/ResolutionBreakdownDonut"
-import { MultiSelect } from "@/components/ui/multi-select"
 import { TotalConversationsGraph } from "./graphs/TotalConversationsGraph"
 import FAQManagement from "./FAQManagement"
-import { outcomeData } from "@/lib/data/outcomeData"
+// ✅ Updated imports to use 30-day data
+import { 
+  totalSessionsData30Days, 
+  uniqueUsersData30Days, 
+  selfServiceData30Days 
+} from "@/lib/data/comprehensiveFulldata"
 
 export default function BotInsights() {
   const { 
     startDate, 
     endDate,
-    getSelfServiceFilters,
-    setSelfServiceProduct,
-    setSelfServiceStoreId
+    getGlobalCityFilter,
+    getGlobalUserTypeFilter,
   } = useMetricsStore()
   
   const [selectedTab, setSelectedTab] = useState("engagement")
 
-  // Get self-service filters using the method instead of getter
-  const selfServiceFilters = getSelfServiceFilters()
+  // Get global filters
+  const globalCities = getGlobalCityFilter()
+  const globalUserTypes = getGlobalUserTypeFilter()
 
-  // Sample data for stat cards - Updated to use new structure
-  const data = useMemo(() => {
-    return [
-      { date: "2025-06-16", totalSessions: 105, uniqueUsers: 48, totalConversations: 112, city: "New York", userType: "customer", product: "Hennypenny Fryer 1", storeId: "NYC001" },
-      { date: "2025-06-17", totalSessions: 120, uniqueUsers: 51, totalConversations: 108, city: "New York", userType: "customer", product: "Hennypenny Fryer 1", storeId: "NYC001" },
-      { date: "2025-06-22", totalSessions: 100, uniqueUsers: 49, totalConversations: 115, city: "London", userType: "operative", product: "Commercial Oven", storeId: "LON002" },
-      { date: "2025-06-23", totalSessions: 140, uniqueUsers: 62, totalConversations: 138, city: "London", userType: "operative", product: "Commercial Oven", storeId: "LON002" },
-    ].filter((d) => {
+  // Calculate stats from actual 30-day data sources with global filters applied
+  const statsData = useMemo(() => {
+    // Filter each dataset separately with global filters
+    const filteredSessionsData = totalSessionsData30Days.filter((d) => {
       const dt = new Date(d.date)
-      return dt >= startDate && dt <= endDate
+      return (
+        dt >= startDate &&
+        dt <= endDate &&
+        (globalCities.length === 0 || globalCities.includes(d.city)) &&
+        (globalUserTypes.length === 0 || globalUserTypes.includes(d.userType))
+      )
     })
-  }, [startDate, endDate])
 
-  const resolved = outcomeData.filter((d) => d.outcome === "resolved").length
-  const totalUsers = data.reduce((sum, d) => sum + d.uniqueUsers, 0)
-  const totalSessions = data.reduce((sum, d) => sum + d.totalSessions, 0)
-  const totalConversations = data.reduce((sum, d) => sum + d.totalConversations, 0)
-  const ssr = ((resolved / totalConversations) * 100).toFixed(1)
+    const filteredUsersData = uniqueUsersData30Days.filter((d) => {
+      const dt = new Date(d.date)
+      return (
+        dt >= startDate &&
+        dt <= endDate &&
+        (globalCities.length === 0 || globalCities.includes(d.city)) &&
+        (globalUserTypes.length === 0 || globalUserTypes.includes(d.userType))
+      )
+    })
 
+    // Filter self-service data with global filters  
+    const filteredSelfServiceData = selfServiceData30Days.filter((d) => {
+      const dt = new Date(d.date)
+      return (
+        dt >= startDate &&
+        dt <= endDate &&
+        (globalCities.length === 0 || globalCities.includes(d.city)) &&
+        (globalUserTypes.length === 0 || globalUserTypes.includes(d.userType))
+      )
+    })
 
-  const productOptions = [
-    { label: "Hennypenny Fryer 1", value: "Hennypenny Fryer 1" },
-    { label: "Hennypenny Fryer 2", value: "Hennypenny Fryer 2" },
-    { label: "Commercial Oven", value: "Commercial Oven" }
-  ]
+    // Calculate totals from each dataset
+    const totalSessions = filteredSessionsData.reduce((sum, d) => sum + d.totalSessions, 0)
+    const totalUniqueUsers = filteredUsersData.reduce((sum, d) => sum + d.uniqueUsers, 0)
 
-  const storeIdOptions = [
-    { label: "NYC001", value: "NYC001" },
-    { label: "NYC002", value: "NYC002" },
-    { label: "LON001", value: "LON001" },
-    { label: "LON002", value: "LON002" },
-    { label: "MUM001", value: "MUM001" },
-    { label: "MUM002", value: "MUM002" }
-  ]
+    // Calculate self-service metrics from actual self-service data
+    const totalResolved = filteredSelfServiceData.reduce((sum, d) => sum + d.resolvedSessions, 0)
+    const totalEscalations = filteredSelfServiceData.reduce((sum, d) => sum + d.notResolvedSessions, 0)
+    const totalAbandoned = filteredSelfServiceData.reduce((sum, d) => sum + d.abandonedSessions, 0)
+    const totalSelfServiceSessions = totalResolved + totalEscalations + totalAbandoned
+
+    // ✅ Calculate percentages based on self-service data - should show ~85%, ~10%, ~5%
+    const selfResolvedPercentage = totalSelfServiceSessions > 0 ? 
+      ((totalResolved / totalSelfServiceSessions) * 100).toFixed(1) : "0.0"
+    const escalationPercentage = totalSelfServiceSessions > 0 ? 
+      ((totalEscalations / totalSelfServiceSessions) * 100).toFixed(1) : "0.0"
+    const abandonedPercentage = totalSelfServiceSessions > 0 ? 
+      ((totalAbandoned / totalSelfServiceSessions) * 100).toFixed(1) : "0.0"
+
+    return {
+      totalSessions,
+      totalUniqueUsers,
+      totalResolved,
+      totalEscalations,
+      totalAbandoned,
+      selfResolvedPercentage,
+      escalationPercentage,
+      abandonedPercentage
+    }
+  }, [startDate, endDate, globalCities, globalUserTypes])
 
   return (
     <div className="min-h-screen bg-slate-50">
       <div className="mx-auto p-4">
         
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+        {/* Stats Cards - Updated with real calculated metrics from 30-day data */}
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-8">
           <StatCard 
-            title="Total Sessions" 
-            value={totalSessions.toLocaleString()} 
+            title="# Sessions" 
+            value={statsData.totalSessions.toLocaleString()} 
             iconType="totalSessions"
             description="Sessions started"
+            tooltipDescription="Total number of times users started a conversation with the bot."
           />
           <StatCard 
-            title="Total Requests" 
-            value={totalConversations.toLocaleString()} 
-            iconType="totalConversations"
-            description="Total exchanges"
-          />
-          <StatCard 
-            title="Total Users" 
-            value={totalUsers.toLocaleString()} 
+            title="# Unique Users" 
+            value={statsData.totalUniqueUsers.toLocaleString()} 
             iconType="totalUsers"
-            description="Unique users"
+            description="Distinct users"
+            tooltipDescription="Number of different people who used the bot (no duplicates counted)."
           />
           <StatCard 
-            title="Resolutions" 
-            value={resolved.toLocaleString()} 
+            title="# Self-Resolved" 
+            value={statsData.totalResolved.toLocaleString()} 
             iconType="resolved"
             description="Resolved queries"
+            tooltipDescription="Number of conversations where users got their problem solved without human help."
           />
           <StatCard 
-            title="Success Rate" 
-            value={`${ssr}%`} 
-            iconType="ssr"
+            title="# Escalations" 
+            value={statsData.totalEscalations.toLocaleString()} 
+            iconType="escalations"
+            description="Escalated sessions"
+            tooltipDescription="Number of conversations that needed to be transferred to a human agent."
+          />
+          <StatCard 
+            title="# Abandoned" 
+            value={statsData.totalAbandoned.toLocaleString()} 
+            iconType="abandoned"
+            description="Abandoned sessions"
+            tooltipDescription="Number of conversations where users left without getting help or escalating."
+          />
+          <StatCard 
+            title="% Self-Resolved" 
+            value={`${statsData.selfResolvedPercentage}%`} 
+            iconType="resolved"
             description="Resolution rate"
-            className="col-span-2 md:col-span-1"
+            tooltipDescription="Percentage of conversations that were successfully resolved by the bot alone."
+          />
+          <StatCard 
+            title="% Escalations" 
+            value={`${statsData.escalationPercentage}%`} 
+            iconType="escalations"
+            description="Escalation rate"
+            tooltipDescription="Percentage of conversations that needed human assistance to resolve."
+          />
+          <StatCard 
+            title="% Abandoned" 
+            value={`${statsData.abandonedPercentage}%`} 
+            iconType="abandoned"
+            description="Abandonment rate"
+            tooltipDescription="Percentage of users who left the conversation without finding a solution."
           />
         </div>
 
@@ -108,19 +165,19 @@ export default function BotInsights() {
                   value="engagement"
                   className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-4 py-2 text-sm font-medium transition-all data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm"
                 >
-                  Engagement
+                  Engagement Metrics
                 </TabsTrigger>
                 <TabsTrigger
                   value="selfservice"
                   className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-4 py-2 text-sm font-medium transition-all data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm"
                 >
-                  Self Service Analytics
+                  Self Service Metrics
                 </TabsTrigger>
                 <TabsTrigger
                   value="faqs"
                   className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-4 py-2 text-sm font-medium transition-all data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm"
                 >
-                  FAQs
+                  Requests Deep-dive
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -143,45 +200,15 @@ export default function BotInsights() {
             </TabsContent>
 
             <TabsContent value="selfservice" className="p-6 space-y-6">
-              {/* Global Filters */}
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                  <h2 className="text-xl font-semibold text-slate-900">Self Service Analytics</h2>
-                </div>
-                
-                <div className="flex flex-wrap gap-3">
-                  <div className="flex items-center gap-2">
-                    <label className="text-sm font-medium text-slate-700">Product:</label>
-                    <MultiSelect
-                      options={productOptions}
-                      selected={selfServiceFilters.product}
-                      onChange={setSelfServiceProduct}
-                      placeholder="All Products"
-                    />
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <label className="text-sm font-medium text-slate-700">Store:</label>
-                    <MultiSelect
-                      options={storeIdOptions}
-                      selected={selfServiceFilters.storeId}
-                      onChange={setSelfServiceStoreId}
-                      placeholder="All Stores"
-                    />
-                  </div>
-                </div>
-              </div>
-
               {/* Performance Combination Chart - Full Width */}
               <div className="w-full">
                 <PerformanceCombinationChart />
               </div>
 
               {/* Resolution Breakdown Donut - Full Width */}
-              <div className="w-full">
+              {/* <div className="w-full">
                 <ResolutionBreakdownDonut />
-              </div>
+              </div> */}
             </TabsContent>
 
             <TabsContent value="faqs" className="p-6">

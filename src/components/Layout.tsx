@@ -36,7 +36,7 @@ const Layout = ({ children, activeView, setActiveView }: LayoutProps) => {
             size="icon"
             className={`h-12 w-12 rounded-lg ${activeView === "builder" ? "bg-blue-600 text-white" : "text-gray-500 hover:bg-gray-100 hover:text-blue-600"}`}
             onClick={() => setActiveView("builder")}
-            title="Bot Builder"
+            title="Analytics"
           >
             <Bot className="h-5 w-5" />
           </Button>
@@ -58,7 +58,7 @@ const Layout = ({ children, activeView, setActiveView }: LayoutProps) => {
         {/* Header */}
         <header className="border-b border-slate-200 bg-white shadow-sm z-10">
           <div className="w-full px-4 flex items-center justify-between py-2">
-            <h1 className="text-lg font-semibold text-slate-800">Bot Builder</h1>
+            <h1 className="text-lg font-semibold text-slate-800">Analytics</h1>
             <div className="flex items-center gap-4">
               {/* ✅ Global City Filter */}
               <div className="flex items-center gap-2">

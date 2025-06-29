@@ -1,15 +1,20 @@
 import Plot from "react-plotly.js"
 import { useMetricsStore } from "@/store/useMetricsStore"
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import { Label } from "@/components/ui/label"
 import { MultiSelect } from "@/components/ui/multi-select"
-import { totalConversationsData } from "@/lib/data/dummyData"
+import { totalConversationsData30Days } from "@/lib/data/comprehensiveFulldata"
 import { Data } from "plotly.js"
 import TypeableStoreFilter from "../filters/TypeableStoreFilter"
 
-// Removed CITY_OPTIONS and USER_TYPE_OPTIONS since they're now global
 const PRODUCT_OPTIONS = ["Hennypenny Fryer 1", "Hennypenny Fryer 2", "Commercial Oven"]
-const STORE_ID_OPTIONS = ["NYC001", "NYC002", "LON001", "LON002", "MUM001", "MUM002"]
+
+// Dimension options for the dropdown
+const DIMENSION_OPTIONS = [
+  { label: "User", value: "userType" },
+  { label: "Products", value: "product" },
+  { label: "Cities", value: "city" }
+]
 
 export const TotalConversationsGraph = () => {
   const {
@@ -18,14 +23,17 @@ export const TotalConversationsGraph = () => {
     getGraphFilters,
     setGraphProduct,
     setGraphStoreId,
-    getGlobalCityFilter,     // ✅ Global city filter
-    getGlobalUserTypeFilter, // ✅ Global user type filter
+    getGlobalCityFilter,
+    getGlobalUserTypeFilter,
   } = useMetricsStore()
+
+  // Local state for selected dimension
+  const [selectedDimension, setSelectedDimension] = useState<string[]>([])
 
   // Get filters specific to this graph
   const filters = getGraphFilters('totalConversations')
-  const globalCities = getGlobalCityFilter()         // ✅ Get global cities
-  const globalUserTypes = getGlobalUserTypeFilter() // ✅ Get global user types
+  const globalCities = getGlobalCityFilter()
+  const globalUserTypes = getGlobalUserTypeFilter()
 
   const handleProductChange = (values: string[]) => {
     setGraphProduct('totalConversations', values)
@@ -35,65 +43,98 @@ export const TotalConversationsGraph = () => {
     setGraphStoreId('totalConversations', values)
   }
 
-  // ✅ UPDATED: Use both global filters in data filtering
+  const handleDimensionChange = (values: string[]) => {
+    setSelectedDimension(values)
+  }
+
+  // Filter and process data based on global filters and graph-specific filters
   const data = useMemo(() => {
-    return totalConversationsData.filter((d) => {
+    return totalConversationsData30Days.filter((d) => {
       const dt = new Date(d.date)
       return (
         dt >= startDate &&
         dt <= endDate &&
-        (globalCities.length === 0 || globalCities.includes(d.city)) &&           // ✅ Global city filter
-        (globalUserTypes.length === 0 || globalUserTypes.includes(d.userType)) && // ✅ Global user type filter
+        (globalCities.length === 0 || globalCities.includes(d.city)) &&
+        (globalUserTypes.length === 0 || globalUserTypes.includes(d.userType)) &&
         (filters.product.length === 0 || filters.product.includes(d.product)) &&
         (filters.storeId.length === 0 || filters.storeId.includes(d.storeId))
       )
     })
-  }, [startDate, endDate, globalCities, globalUserTypes, filters]) // ✅ Add both global filters to deps
+  }, [startDate, endDate, globalCities, globalUserTypes, filters])
 
   const traces: Data[] = useMemo(() => {
-    // ✅ Use global filters instead of graph-specific filters
-    const citiesToShow = globalCities.length > 0 ? globalCities : ["New York", "London", "Mumbai"]
-    const userTypesToShow = globalUserTypes.length > 0 ? globalUserTypes : ["customer", "operative"]
-    const productsToShow = filters.product.length > 0 ? filters.product : PRODUCT_OPTIONS
-    const storeIdsToShow = filters.storeId.length > 0 ? filters.storeId : STORE_ID_OPTIONS
-    
-    const traces: Data[] = []
     const colors = ["#f59e0b", "#ef4444", "#10b981", "#3b82f6", "#8b5cf6", "#06b6d4", "#ec4899", "#14b8a6"]
-    let colorIndex = 0
 
-    citiesToShow.forEach(city => {
-      userTypesToShow.forEach(userType => {
-        productsToShow.forEach(product => {
-          storeIdsToShow.forEach(storeId => {
-            const filteredData = data.filter(d => 
-              d.city === city && 
-              d.userType === userType && 
-              d.product === product && 
-              d.storeId === storeId
-            )
-            
-            if (filteredData.length > 0) {
-              const hasValidData = filteredData.some(d => d.totalConversations !== undefined)
-              if (hasValidData) {
-                traces.push({
-                  x: filteredData.map(d => d.date),
-                  y: filteredData.map(d => d.totalConversations!).filter(val => val !== undefined),
-                  type: "scatter",
-                  mode: "lines+markers",
-                  name: `${city} - ${userType} - ${product} - ${storeId}`,
-                  line: { color: colors[colorIndex % colors.length] },
-                  marker: { size: 6 }
-                })
-                colorIndex++
-              }
-            }
-          })
+    // If no dimension is selected, show total aggregated data
+    if (selectedDimension.length === 0) {
+      // Group by date and sum all conversations
+      const aggregatedData = data.reduce((acc, curr) => {
+        if (!acc[curr.date]) {
+          acc[curr.date] = 0
+        }
+        acc[curr.date] += curr.totalConversations || 0
+        return acc
+      }, {} as Record<string, number>)
+
+      const sortedDates = Object.keys(aggregatedData).sort()
+      
+      return [{
+        x: sortedDates,
+        y: sortedDates.map(date => aggregatedData[date]),
+        type: "scatter",
+        mode: "lines+markers",
+        name: "Total Conversations",
+        line: { color: colors[0], width: 3 },
+        marker: { size: 8 }
+      }]
+    }
+
+    // Generate all unique combinations of the selected dimensions
+    const traces: Data[] = []
+    let colorIndex = 0
+    
+    // Create a map to store unique combinations and their aggregated data
+    const combinationMap = new Map<string, Record<string, number>>()
+    
+    // Process each data point
+    data.forEach(item => {
+      // Create combination key based on selected dimensions
+      const combinationValues = selectedDimension.map(dim => item[dim as keyof typeof item] as string)
+      const combinationKey = combinationValues.join(" - ")
+      
+      // Initialize the combination if it doesn't exist
+      if (!combinationMap.has(combinationKey)) {
+        combinationMap.set(combinationKey, {})
+      }
+      
+      // Add conversations to the combination for this date
+      const combinationData = combinationMap.get(combinationKey)!
+      if (!combinationData[item.date]) {
+        combinationData[item.date] = 0
+      }
+      combinationData[item.date] += item.totalConversations || 0
+    })
+    
+    // Convert the map to traces
+    combinationMap.forEach((dateData, combinationKey) => {
+      const sortedDates = Object.keys(dateData).sort()
+      
+      if (sortedDates.length > 0 && sortedDates.some(date => dateData[date] > 0)) {
+        traces.push({
+          x: sortedDates,
+          y: sortedDates.map(date => dateData[date] || 0),
+          type: "scatter",
+          mode: "lines+markers",
+          name: combinationKey,
+          line: { color: colors[colorIndex % colors.length], width: 3 },
+          marker: { size: 6 }
         })
-      })
+        colorIndex++
+      }
     })
 
     return traces
-  }, [data, globalCities, globalUserTypes, filters]) // ✅ Add both global filters to deps
+  }, [data, selectedDimension])
 
   return (
     <div className="group relative overflow-hidden bg-gradient-to-br from-white to-purple-50/30 rounded-3xl border border-white/60 shadow-2xl shadow-purple-500/10 hover:shadow-purple-500/20 transition-all duration-500 hover:scale-[1.01]">
@@ -110,8 +151,20 @@ export const TotalConversationsGraph = () => {
             <p className="text-sm text-slate-500">Communication volume analysis</p>
           </div>
           
-          {/* ✅ Removed City and User Type filters - now handled globally */}
           <div className="flex gap-3 flex-wrap">
+            {/* Dimensions Dropdown */}
+            <div className="flex flex-col">
+              <Label className="mb-2 text-xs font-semibold text-slate-600 uppercase tracking-wider">Dimensions</Label>
+              <div className="relative">
+                <MultiSelect
+                  options={DIMENSION_OPTIONS}
+                  selected={selectedDimension}
+                  onChange={handleDimensionChange}
+                  placeholder="No dimension (Total)"
+                />
+              </div>
+            </div>
+
             <div className="flex flex-col">
               <Label className="mb-2 text-xs font-semibold text-slate-600 uppercase tracking-wider">Product</Label>
               <div className="relative">
@@ -126,12 +179,12 @@ export const TotalConversationsGraph = () => {
 
             <div className="flex flex-col">
               <div className="relative">
-              <TypeableStoreFilter
-                selected={filters.storeId}
-                onChange={handleStoreIdChange}
-                placeholder="Type store ID..."
-                label="Store"
-              />
+                <TypeableStoreFilter
+                  selected={filters.storeId}
+                  onChange={handleStoreIdChange}
+                  placeholder="Type store ID..."
+                  label="Store"
+                />
               </div>
             </div>
           </div>
