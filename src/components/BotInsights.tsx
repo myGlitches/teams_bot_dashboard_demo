@@ -16,7 +16,6 @@ export default function BotInsights() {
     startDate, 
     endDate,
     getSelfServiceFilters,
-    setSelfServiceCity,
     setSelfServiceProduct,
     setSelfServiceStoreId
   } = useMetricsStore()
@@ -45,12 +44,6 @@ export default function BotInsights() {
   const totalConversations = data.reduce((sum, d) => sum + d.totalConversations, 0)
   const ssr = ((resolved / totalConversations) * 100).toFixed(1)
 
-  // Updated filter options with new dimension values
-  const cityOptions = [
-    { label: "New York", value: "New York" },
-    { label: "London", value: "London" },
-    { label: "Mumbai", value: "Mumbai" }
-  ]
 
   const productOptions = [
     { label: "Hennypenny Fryer 1", value: "Hennypenny Fryer 1" },
@@ -158,16 +151,6 @@ export default function BotInsights() {
                 </div>
                 
                 <div className="flex flex-wrap gap-3">
-                  <div className="flex items-center gap-2">
-                    <label className="text-sm font-medium text-slate-700">City:</label>
-                    <MultiSelect
-                      options={cityOptions}
-                      selected={selfServiceFilters.city}
-                      onChange={setSelfServiceCity}
-                      placeholder="All Cities"
-                    />
-                  </div>
-
                   <div className="flex items-center gap-2">
                     <label className="text-sm font-medium text-slate-700">Product:</label>
                     <MultiSelect

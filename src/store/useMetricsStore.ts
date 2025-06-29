@@ -75,7 +75,7 @@ const createDefaultFilters = (): UniversalFilters => ({
   storeId: []
 })
 
-// Initial graph filters with some sensible defaults
+// Initial graph filters with New York as default
 const createInitialGraphFilters = (): Record<GraphId, UniversalFilters> => ({
   totalSessions: {
     userType: [],
@@ -117,8 +117,8 @@ export const useMetricsStore = create<MetricsState>((set, get) => ({
   selectedMetrics: ["totalSessions", "totalConversations", "avgMessagesPerSession", "avgLatency"],
   selectedIntents: [],
   
-  // ✅ Global filters
-  globalCityFilter: [],
+  // ✅ Global filters - Set New York as default for global city filter
+  globalCityFilter: [Cities.NewYork], // 🔄 Changed from [] to [Cities.NewYork]
   globalUserTypeFilter: [], // ✅ Add global user type filter
   
   // ✅ Global filter actions
@@ -161,7 +161,10 @@ export const useMetricsStore = create<MetricsState>((set, get) => ({
       graphFilters: Object.keys(get().graphFilters).reduce((acc, graphId) => {
         acc[graphId as GraphId] = createDefaultFilters()
         return acc
-      }, {} as Record<GraphId, UniversalFilters>)
+      }, {} as Record<GraphId, UniversalFilters>),
+      // 🔄 Also reset global filters to New York default
+      globalCityFilter: [Cities.NewYork],
+      globalUserTypeFilter: []
     }),
 
   // Convenience methods for specific dimensions
