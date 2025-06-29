@@ -35,12 +35,13 @@ const StatCard = ({
   title,
   value,
   iconType,
-  description,
   className = "",
   tooltipDescription,
 }: StatCardProps) => {
-  const truncatedTitle = title.length > 15 ? `${title.slice(0, 15)}...` : title
-  const showTooltip = title.length > 15 || tooltipDescription
+  // Limit character count for title to prevent line wrapping
+  const maxTitleLength = 12  // Adjust this number based on your card width
+  const truncatedTitle = title.length > maxTitleLength ? `${title.slice(0, maxTitleLength)}...` : title
+  const showTooltip = title.length > maxTitleLength || tooltipDescription
 
   const cardContent = (
     <div
@@ -50,15 +51,22 @@ const StatCard = ({
       )}
     >
       <div className="flex items-center justify-between mb-2">
-        <span className="text-sm text-slate-500 font-medium" title={title}>
+        <span 
+          className="text-sm text-slate-500 font-medium truncate max-w-[120px]" 
+          title={title}
+        >
           {truncatedTitle}
         </span>
-        {iconType && iconMap[iconType]}
+        {iconType && (
+          <div className="flex-shrink-0 ml-2">
+            {iconMap[iconType]}
+          </div>
+        )}
       </div>
-      <span className="text-3xl font-semibold text-slate-800 leading-snug">{value}</span>
-      {description && (
-        <span className="text-xs text-slate-400 mt-1 leading-tight">{description}</span>
-      )}
+      <span className="text-3xl font-semibold text-slate-800 leading-snug break-words">{value}</span>
+      {/* {description && (
+        <span className="text-xs text-slate-400 mt-1 leading-tight truncate">{description}</span>
+      )} */}
     </div>
   )
 

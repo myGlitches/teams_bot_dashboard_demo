@@ -143,7 +143,6 @@ export const UniqueUsersGraph = () => {
         <div className="flex justify-between items-start mb-8">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-3 h-3 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-600"></div>
               <h3 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-emerald-900 bg-clip-text text-transparent">
                 Unique Users
               </h3>
@@ -151,11 +150,12 @@ export const UniqueUsersGraph = () => {
             <p className="text-sm text-slate-500">Active user growth trends</p>
           </div>
           
-          <div className="flex gap-3 flex-wrap">
+          {/* FIXED FILTER SECTION */}
+          <div className="flex items-end gap-1 flex-wrap min-w-0">
             {/* Dimensions Dropdown */}
-            <div className="flex flex-col">
-              <Label className="mb-2 text-xs font-semibold text-slate-600 uppercase tracking-wider">Dimensions</Label>
-              <div className="relative">
+            <div className="flex flex-col min-w-0" style={{minWidth: '120px'}}>
+              <Label className="mb-1.5 text-xs font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap">Dimensions</Label>
+              <div className="relative" style={{minWidth: '120px'}}>
                 <MultiSelect
                   options={DIMENSION_OPTIONS}
                   selected={selectedDimension}
@@ -165,9 +165,9 @@ export const UniqueUsersGraph = () => {
               </div>
             </div>
 
-            <div className="flex flex-col">
-              <Label className="mb-2 text-xs font-semibold text-slate-600 uppercase tracking-wider">Product</Label>
-              <div className="relative">
+            <div className="flex flex-col min-w-0" style={{minWidth: '120px'}}>
+              <Label className="mb-1.5 text-xs font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap">Product</Label>
+              <div className="relative" style={{minWidth: '120px'}}>
                 <MultiSelect
                   options={PRODUCT_OPTIONS.map((p) => ({ label: p, value: p }))}
                   selected={filters.product}
@@ -177,7 +177,7 @@ export const UniqueUsersGraph = () => {
               </div>
             </div>
 
-            <div className="flex flex-col">
+            <div className="flex flex-col min-w-0" style={{minWidth: '100px', maxWidth: '100px' }}>
               <div className="relative">
                 <TypeableStoreFilter
                   selected={filters.storeId}

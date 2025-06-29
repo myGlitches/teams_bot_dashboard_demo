@@ -281,7 +281,6 @@ export function PerformanceCombinationChart() {
       <div className="flex justify-between items-start mb-6">
         <div>
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-3 h-3 rounded-full bg-gradient-to-r from-blue-500 to-blue-600"></div>
             <h3 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-blue-900 bg-clip-text text-transparent">
               Performance Combination
             </h3>
@@ -290,19 +289,6 @@ export function PerformanceCombinationChart() {
         </div>
         
         <div className="flex gap-3 flex-wrap">
-          {/* Dimensions Dropdown */}
-          {/* <div className="flex flex-col">
-            <Label className="mb-2 text-xs font-semibold text-slate-600 uppercase tracking-wider">Dimensions</Label>
-            <div className="relative">
-              <MultiSelect
-                options={DIMENSION_OPTIONS}
-                selected={selectedDimension}
-                onChange={handleDimensionChange}
-                placeholder="No dimension (Total)"
-              />
-            </div>
-          </div> */}
-
           <div className="flex flex-col">
             <Label className="mb-2 text-xs font-semibold text-slate-600 uppercase tracking-wider">Product</Label>
             <div className="relative">
