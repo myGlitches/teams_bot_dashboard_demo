@@ -97,7 +97,7 @@ export default function BotInsights() {
       <div className="mx-auto p-4">
         
         {/* Stats Cards - Updated with real calculated metrics from 30-day data */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-8">
           <StatCard 
             title="# Sessions" 
             value={statsData.totalSessions.toLocaleString()} 
@@ -111,27 +111,6 @@ export default function BotInsights() {
             iconType="totalUsers"
             description="Distinct users"
             tooltipDescription="Number of different people who used the bot (no duplicates counted)."
-          />
-          <StatCard 
-            title="# Self-Resolved" 
-            value={statsData.totalResolved.toLocaleString()} 
-            iconType="resolved"
-            description="Resolved queries"
-            tooltipDescription="Number of conversations where users got their problem solved without human help."
-          />
-          <StatCard 
-            title="# Escalations" 
-            value={statsData.totalEscalations.toLocaleString()} 
-            iconType="escalations"
-            description="Escalated sessions"
-            tooltipDescription="Number of conversations that needed to be transferred to a human agent."
-          />
-          <StatCard 
-            title="# Abandoned" 
-            value={statsData.totalAbandoned.toLocaleString()} 
-            iconType="abandoned"
-            description="Abandoned sessions"
-            tooltipDescription="Number of conversations where users left without getting help or escalating."
           />
           <StatCard 
             title="% Self-Resolved" 

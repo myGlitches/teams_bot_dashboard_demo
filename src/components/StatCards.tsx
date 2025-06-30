@@ -39,7 +39,7 @@ const StatCard = ({
   tooltipDescription,
 }: StatCardProps) => {
   // Limit character count for title to prevent line wrapping
-  const maxTitleLength = 12  // Adjust this number based on your card width
+  const maxTitleLength = 20  // Adjust this number based on your card width
   const truncatedTitle = title.length > maxTitleLength ? `${title.slice(0, maxTitleLength)}...` : title
   const showTooltip = title.length > maxTitleLength || tooltipDescription
 

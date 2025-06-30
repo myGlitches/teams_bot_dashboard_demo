@@ -64,16 +64,15 @@ interface FAQManagementProps {
     return (
       <div className="flex flex-col min-h-0">
         {/* Header with Filters */}
-        <div className="flex-shrink-0 p-6 border-b border-slate-200 bg-slate-50/50">
-          <div className="flex items-center justify-between mb-4">
+        <div className="flex-shrink-0 p-4 border-b border-slate-200 bg-slate-50/50">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-6 h-6 rounded bg-blue-100 flex items-center justify-center">
                 <MessageCircleQuestion className="w-4 h-4 text-blue-600" />
               </div>
               <div className="flex items-center gap-2">
                 <div className="flex flex-col">
-                  <h3 className="font-semibold text-slate-900">Top Unanswered Questions</h3>
-                  <p className="text-xs text-slate-600">Unanswered questions are questions that have not been answered by the bot.</p>
+                  <h3 className="font-semibold text-slate-900">Top Questions</h3>
                 </div>
               </div>
             </div>

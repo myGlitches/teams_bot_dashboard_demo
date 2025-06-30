@@ -9,11 +9,11 @@ import TypeableStoreFilter from "../filters/TypeableStoreFilter"
 const PRODUCT_OPTIONS = ["Hennypenny Fryer 1", "Hennypenny Fryer 2", "Commercial Oven"]
 
 // Dimension options for the dropdown
-// const DIMENSION_OPTIONS = [
-//   { label: "User", value: "userType" },
-//   { label: "Products", value: "product" },
-//   { label: "Cities", value: "city" }
-// ]
+const DIMENSION_OPTIONS = [
+  { label: "User", value: "userType" },
+  { label: "Products", value: "product" },
+  { label: "Cities", value: "city" }
+]
 
 export function PerformanceCombinationChart() {
   const { 
@@ -27,7 +27,7 @@ export function PerformanceCombinationChart() {
   } = useMetricsStore()
 
   // Local state for selected dimension
-  const [selectedDimension, _setSelectedDimension] = useState<string[]>([])
+  const [selectedDimension, setSelectedDimension] = useState<string[]>([])
 
   // Get filters for performance combination chart
   const filters = getGraphFilters('performanceCombination')
@@ -42,9 +42,9 @@ export function PerformanceCombinationChart() {
     setGraphStoreId('performanceCombination', values)
   }
 
-  // const handleDimensionChange = (values: string[]) => {
-  //   setSelectedDimension(values)
-  // }
+  const handleDimensionChange = (values: string[]) => {
+    setSelectedDimension(values)
+  }
 
   // Filter and aggregate data by date
   const chartData = useMemo(() => {
@@ -156,35 +156,35 @@ export function PerformanceCombinationChart() {
         {
           x: chartData.map(d => d.date),
           y: chartData.map(d => d.selfServicePct),
-          name: 'Self Service Resolution %',
+          name: '% Self-Resolved',
           type: 'scatter' as const,
           mode: 'lines+markers' as const,
           line: { color: colors[1], width: 3 },
           marker: { color: colors[1], size: 7, symbol: 'circle' },
           yaxis: 'y2',
-          hovertemplate: '<b>Self Service Resolution</b><br>Date: %{x}<br>Rate: %{y:.1f}%<br><extra></extra>'
+          hovertemplate: '<b>% Self-Resolved</b><br>Date: %{x}<br>Rate: %{y:.1f}%<br><extra></extra>'
         },
         {
           x: chartData.map(d => d.date),
           y: chartData.map(d => d.externalEscalationPct),
-          name: 'External Escalation %',
+          name: '% Escalation',
           type: 'scatter' as const,
           mode: 'lines+markers' as const,
           line: { color: colors[2], width: 3 },
           marker: { color: colors[2], size: 7, symbol: 'circle' },
           yaxis: 'y2',
-          hovertemplate: '<b>External Escalation</b><br>Date: %{x}<br>Rate: %{y:.1f}%<br><extra></extra>'
+          hovertemplate: '<b>% Escalation</b><br>Date: %{x}<br>Rate: %{y:.1f}%<br><extra></extra>'
         },
         {
           x: chartData.map(d => d.date),
           y: chartData.map(d => d.abandonedPct),
-          name: 'Abandoned Conversations %',
+          name: '% Abandoned',
           type: 'scatter' as const,
           mode: 'lines+markers' as const,
           line: { color: colors[3], width: 3 },
           marker: { color: colors[3], size: 7, symbol: 'circle' },
           yaxis: 'y2',
-          hovertemplate: '<b>Abandoned Conversations</b><br>Date: %{x}<br>Rate: %{y:.1f}%<br><extra></extra>'
+          hovertemplate: '<b>% Abandoned</b><br>Date: %{x}<br>Rate: %{y:.1f}%<br><extra></extra>'
         }
       ]
     }
@@ -201,13 +201,13 @@ export function PerformanceCombinationChart() {
       traces.push({
         x: dimData.map(d => d.date),
         y: dimData.map(d => d.selfServicePct),
-        name: `${dimKey} - Self Service %`,
+        name: `${dimKey} - Self-Resolved`,
         type: 'scatter' as const,
         mode: 'lines+markers' as const,
         line: { color: colors[1], width: 2, dash: index > 0 ? 'dot' : 'solid' },
         marker: { color: colors[1], size: 5 },
         yaxis: 'y2',
-        hovertemplate: `<b>${dimKey} - Self Service</b><br>Date: %{x}<br>Rate: %{y:.1f}%<br><extra></extra>`
+        hovertemplate: `<b>${dimKey} - Self-Resolved</b><br>Date: %{x}<br>Rate: %{y:.1f}%<br><extra></extra>`
       })
     })
     
@@ -289,6 +289,19 @@ export function PerformanceCombinationChart() {
         </div>
         
         <div className="flex gap-3 flex-wrap">
+          <div className="flex flex-col">
+            <Label>Dimensions</Label>
+            <div className="relative">
+            <MultiSelect
+              options={DIMENSION_OPTIONS}
+              selected={selectedDimension}
+              onChange={handleDimensionChange}
+              placeholder="No dimension (Total)"
+            />
+            </div>
+          </div>
+
+          
           <div className="flex flex-col">
             <Label className="mb-2 text-xs font-semibold text-slate-600 uppercase tracking-wider">Product</Label>
             <div className="relative">
