@@ -290,7 +290,7 @@ export function PerformanceCombinationChart() {
         
         <div className="flex gap-3 flex-wrap">
           <div className="flex flex-col">
-            <Label>Dimensions</Label>
+            <Label className="mb-2 text-xs font-semibold text-slate-600 uppercase tracking-wider">Dimensions</Label>
             <div className="relative">
             <MultiSelect
               options={DIMENSION_OPTIONS}
